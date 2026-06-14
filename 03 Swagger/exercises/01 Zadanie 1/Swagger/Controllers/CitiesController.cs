@@ -78,11 +78,70 @@ namespace Swagger.Controllers
                 return NotFound($"Miasto o ID {id} nie znaleziono");
             }
 
+            _logger.LogInformation($"Pobrano miasto: {city.Name}");
             return Ok(city);
+        }
+
+        /// <summary>
+        /// Aktualizuje wybrane miasto
+        /// </summary>
+        /// <param name="id">ID miasta do aktualizacji</param>
+        /// <param name="request">Nowe dane miasta</param>
+        /// <returns>Zaktualizowane miasto</returns>
+        [HttpPut("{id}", Name = "UpdateCity")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult Put(int id, [FromBody] UpdateCityRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Country))
+            {
+                return BadRequest("Nazwa i kraj nie mogą być puste");
+            }
+
+            var city = _cities.FirstOrDefault(c => c.Id == id);
+            if (city == null)
+            {
+                return NotFound($"Miasto o ID {id} nie znaleziono");
+            }
+
+            city.Name = request.Name;
+            city.Country = request.Country;
+
+            _logger.LogInformation($"Zaktualizowano miasto: {city.Name}");
+            return Ok(city);
+        }
+
+        /// <summary>
+        /// Usuwa wybrane miasto
+        /// </summary>
+        /// <param name="id">ID miasta do usunięcia</param>
+        /// <returns>Potwierdzenie usunięcia</returns>
+        [HttpDelete("{id}", Name = "DeleteCity")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult Delete(int id)
+        {
+            var city = _cities.FirstOrDefault(c => c.Id == id);
+            if (city == null)
+            {
+                return NotFound($"Miasto o ID {id} nie znaleziono");
+            }
+
+            _cities.Remove(city);
+            _logger.LogInformation($"Usunięto miasto: {city.Name}");
+
+            return Ok(new { message = $"Miasto '{city.Name}' zostało usunięte", deletedCity = city });
         }
     }
 
     public class CreateCityRequest
+    {
+        public string Name { get; set; }
+        public string Country { get; set; }
+    }
+
+    public class UpdateCityRequest
     {
         public string Name { get; set; }
         public string Country { get; set; }
